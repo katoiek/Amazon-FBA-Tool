@@ -1,0 +1,26 @@
+{
+  "name": "amazon-fba-dashboard",
+  "version": "1.0.0",
+  "description": "Amazon FBA売上データ分析ダッシュボード",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "tsx src/dev-server.ts",
+    "dev:cloudflare": "wrangler dev",
+    "build": "tsc && esbuild src/server.ts --bundle --outfile=dist/server.js --format=esm --platform=node --target=node18",
+    "deploy": "wrangler publish",
+    "start": "node dist/server.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "esbuild": "^0.19.8",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.22.1"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "@hono/node-server": "^1.8.0",
+    "tsx": "^4.6.2"
+  }
+}

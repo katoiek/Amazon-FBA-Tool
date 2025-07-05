@@ -1,0 +1,7 @@
+name = "amazon-fba-dashboard"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+node_compat = true
+
+[vars]
+ENVIRONMENT = "development"
