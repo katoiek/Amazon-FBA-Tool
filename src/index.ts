@@ -59,6 +59,7 @@ function getIndexHTML(): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amazon FBA 売上分析ダッシュボード</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -176,6 +177,10 @@ function getIndexHTML(): string {
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
+        .chart-container canvas {
+            max-height: 400px;
+        }
+
         .chart-title {
             font-size: 1.2rem;
             margin-bottom: 1rem;
@@ -189,10 +194,37 @@ function getIndexHTML(): string {
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .table-controls button {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .table-controls button:hover {
+            background: #5a6fd8;
+        }
+
+        .negative-value {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
         .sku-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
+            font-size: 0.9rem;
         }
 
         .sku-table th,
@@ -233,6 +265,15 @@ function getIndexHTML(): string {
 
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .sku-table-container {
+                overflow-x: auto;
+            }
+
+            .sku-table {
+                font-size: 0.8rem;
+                min-width: 1400px;
             }
         }
     </style>
@@ -293,6 +334,13 @@ function getIndexHTML(): string {
 
             <div class="sku-table-container">
                 <h3 class="chart-title">SKU別売上分析</h3>
+                <div class="chart-container">
+                    <canvas id="skuChart"></canvas>
+                </div>
+                <div class="table-controls">
+                    <button id="showAllSkus" onclick="toggleSkuView()">全SKU表示</button>
+                    <span id="skuCountDisplay">上位10商品を表示中</span>
+                </div>
                 <table class="sku-table">
                     <thead>
                         <tr>
@@ -300,9 +348,13 @@ function getIndexHTML(): string {
                             <th>商品名</th>
                             <th>売上</th>
                             <th>利益</th>
-                            <th>数量</th>
-                            <th>平均単価</th>
+                            <th>返金額</th>
+                            <th>販売数</th>
+                            <th>返品数</th>
+                            <th>その他手数料</th>
+                            <th>FBA手数料</th>
                             <th>利益率</th>
+                            <th>返品率</th>
                         </tr>
                     </thead>
                     <tbody id="skuTableBody">
@@ -316,6 +368,8 @@ function getIndexHTML(): string {
         let currentData = null;
         let monthlyChart = null;
         let feeChart = null;
+        let skuChart = null;
+        let showAllSkus = false;
 
         // ファイルドラッグ&ドロップ
         const fileInputContainer = document.getElementById('fileInputContainer');
@@ -396,6 +450,9 @@ function getIndexHTML(): string {
             // 費用内訳グラフ
             displayFeeChart(data.feeBreakdown);
 
+            // SKUチャート
+            displaySkuChart(data.skuAnalysis);
+
             // SKUテーブル
             displaySkuTable(data.skuAnalysis);
 
@@ -426,6 +483,12 @@ function getIndexHTML(): string {
                         borderColor: '#28a745',
                         backgroundColor: 'rgba(40, 167, 69, 0.1)',
                         tension: 0.4
+                    }, {
+                        label: '手数料',
+                        data: trends.map(t => t.fees),
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
                     }]
                 },
                 options: {
@@ -441,6 +504,138 @@ function getIndexHTML(): string {
                         }
                     }
                 }
+            });
+        }
+
+        function displaySkuChart(skuAnalysis) {
+            const ctx = document.getElementById('skuChart').getContext('2d');
+
+            if (skuChart) {
+                skuChart.destroy();
+            }
+
+            // 上位10SKUを取得
+            const topSkus = skuAnalysis.slice(0, 10);
+
+            const skuLabels = topSkus.map(sku => sku.sku);
+            const profitData = topSkus.map(sku => sku.totalProfit);
+            const returnData = topSkus.map(sku => Math.abs(sku.returnAmount)); // 絶対値で表示
+            const otherFeesData = topSkus.map(sku => Math.abs(sku.amazonFees)); // 絶対値で表示
+            const fbaFeesData = topSkus.map(sku => Math.abs(sku.fbaFees)); // 絶対値で表示
+
+            // 合計額を計算
+            const totalAmounts = topSkus.map(sku =>
+                sku.totalProfit + Math.abs(sku.returnAmount) + Math.abs(sku.amazonFees) + Math.abs(sku.fbaFees)
+            );
+
+            skuChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: skuLabels,
+                    datasets: [
+                        {
+                            label: '利益',
+                            data: profitData,
+                            backgroundColor: 'rgba(46, 204, 113, 0.8)',
+                            borderColor: 'rgba(46, 204, 113, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '返金額',
+                            data: returnData,
+                            backgroundColor: 'rgba(231, 76, 60, 0.8)',
+                            borderColor: 'rgba(231, 76, 60, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'その他手数料',
+                            data: otherFeesData,
+                            backgroundColor: 'rgba(230, 126, 34, 0.8)',
+                            borderColor: 'rgba(230, 126, 34, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'FBA手数料',
+                            data: fbaFeesData,
+                            backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'SKU別売上構成（上位10商品）'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                footer: function(context) {
+                                    const index = context[0].dataIndex;
+                                    const total = totalAmounts[index];
+                                    return '合計: ¥' + total.toLocaleString();
+                                }
+                            }
+                        },
+                        datalabels: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'SKU'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: '金額 (¥)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = '#333';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        chart.data.datasets[0].data.forEach((value, index) => {
+                            const meta = chart.getDatasetMeta(0);
+                            const bar = meta.data[index];
+                            const total = totalAmounts[index];
+
+                            // 最上位のバーの位置を取得
+                            let topY = bar.y;
+                            for (let i = 1; i < chart.data.datasets.length; i++) {
+                                const dataset = chart.getDatasetMeta(i);
+                                if (dataset.data[index] && dataset.data[index].y < topY) {
+                                    topY = dataset.data[index].y;
+                                }
+                            }
+
+                            ctx.fillText('¥' + total.toLocaleString(), bar.x, topY - 5);
+                        });
+                    }
+                }]
             });
         }
 
@@ -487,23 +682,52 @@ function getIndexHTML(): string {
             const tbody = document.getElementById('skuTableBody');
             tbody.innerHTML = '';
 
-            skuAnalysis.slice(0, 10).forEach(sku => {
+            const displayCount = showAllSkus ? skuAnalysis.length : 10;
+            const skusToShow = skuAnalysis.slice(0, displayCount);
+
+            skusToShow.forEach(sku => {
                 const row = document.createElement('tr');
+                const returnRate = sku.salesCount > 0 ? (sku.returnCount / sku.salesCount * 100) : 0;
                 row.innerHTML = \`
                     <td>\${sku.sku}</td>
-                    <td>\${sku.description.length > 30 ? sku.description.substring(0, 30) + '...' : sku.description}</td>
+                    <td>\${sku.description.length > 15 ? sku.description.substring(0, 15) + '...' : sku.description}</td>
                     <td>\${formatCurrency(sku.totalSales)}</td>
                     <td>\${formatCurrency(sku.totalProfit)}</td>
-                    <td>\${sku.totalQuantity}</td>
-                    <td>\${formatCurrency(sku.averageSellingPrice)}</td>
-                    <td>\${sku.profitMargin.toFixed(1)}%</td>
+                    <td>\${formatCurrency(sku.returnAmount)}</td>
+                    <td>\${sku.salesCount}</td>
+                    <td>\${sku.returnCount}</td>
+                    <td>\${formatCurrency(sku.amazonFees)}</td>
+                    <td>\${formatCurrency(sku.fbaFees)}</td>
+                    <td>\${formatPercentage(sku.profitMargin)}</td>
+                    <td>\${formatPercentage(returnRate)}</td>
                 \`;
                 tbody.appendChild(row);
             });
+
+            // 表示件数の更新
+            document.getElementById('skuCountDisplay').textContent =
+                showAllSkus ? \`全\${skuAnalysis.length}商品を表示中\` : '上位10商品を表示中';
+        }
+
+        function toggleSkuView() {
+            showAllSkus = !showAllSkus;
+            const button = document.getElementById('showAllSkus');
+            button.textContent = showAllSkus ? '上位10商品表示' : '全SKU表示';
+
+            if (currentData) {
+                displaySkuTable(currentData.skuAnalysis);
+            }
         }
 
         function formatCurrency(amount) {
-            return '¥' + Math.round(amount).toLocaleString();
+            const rounded = Math.round(amount);
+            const formatted = '¥' + rounded.toLocaleString();
+            return amount < 0 ? \`<span class="negative-value">\${formatted}</span>\` : formatted;
+        }
+
+        function formatPercentage(value) {
+            const formatted = value.toFixed(1) + '%';
+            return value < 0 ? \`<span class="negative-value">\${formatted}</span>\` : formatted;
         }
 
         function showLoading(show) {

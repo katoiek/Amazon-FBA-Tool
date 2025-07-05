@@ -97,7 +97,7 @@ function parseAmount(value: string): number {
 
 export function analyzeTransactions(transactions: AmazonTransaction[]): DashboardData {
   const skuMap = new Map<string, SkuAnalysis>();
-  const monthlyMap = new Map<string, { sales: number; profit: number }>();
+  const monthlyMap = new Map<string, { sales: number; profit: number; fees: number }>();
 
   let totalSales = 0;
   let totalProfit = 0;
@@ -128,9 +128,12 @@ export function analyzeTransactions(transactions: AmazonTransaction[]): Dashboar
           totalSales: 0,
           totalProfit: 0,
           totalQuantity: 0,
-          amazonFees: 0,
-          advertisingCosts: 0,
+          salesCount: 0,
           returnAmount: 0,
+          returnCount: 0,
+          amazonFees: 0,
+          fbaFees: 0,
+          advertisingCosts: 0,
           fbaStorageFees: 0,
           otherFees: 0,
           averageSellingPrice: 0,
@@ -140,18 +143,20 @@ export function analyzeTransactions(transactions: AmazonTransaction[]): Dashboar
         existing.totalSales += productSales;
         existing.totalProfit += total;
         existing.totalQuantity += transaction.quantity;
-        existing.amazonFees += Math.abs(fees);
-        existing.fbaStorageFees += Math.abs(fbaFees);
-        existing.otherFees += Math.abs(otherTransactionFees);
+        existing.salesCount += 1;
+        existing.amazonFees += fees; // マイナス値として保持
+        existing.fbaFees += fbaFees; // マイナス値として保持
+        existing.otherFees += otherTransactionFees; // マイナス値として保持
 
         skuMap.set(sku, existing);
       }
 
       // 月別データ
       const month = date.substring(0, 7); // YYYY/MM
-      const monthlyData = monthlyMap.get(month) || { sales: 0, profit: 0 };
+      const monthlyData = monthlyMap.get(month) || { sales: 0, profit: 0, fees: 0 };
       monthlyData.sales += productSales;
       monthlyData.profit += total;
+      monthlyData.fees += Math.abs(fees) + Math.abs(fbaFees); // 手数料の合計を追加
       monthlyMap.set(month, monthlyData);
     }
 
@@ -163,11 +168,47 @@ export function analyzeTransactions(transactions: AmazonTransaction[]): Dashboar
     // 返金
     if (transactionType === '返金') {
       returnAmount += Math.abs(total);
+
+      // SKU別返金データ
+      if (sku) {
+        const existing = skuMap.get(sku);
+        if (existing) {
+          existing.returnAmount += total; // マイナス値として保持
+          existing.returnCount += 1;
+          skuMap.set(sku, existing);
+        }
+      }
+
+      // 月別データ（返金）
+      const month = date.substring(0, 7);
+      const monthlyData = monthlyMap.get(month) || { sales: 0, profit: 0, fees: 0 };
+      monthlyData.profit += total; // 返金はマイナス値なので利益から引く
+      monthlyMap.set(month, monthlyData);
     }
 
     // FBA保管手数料
     if (transactionType === 'FBA 在庫関連の手数料') {
       fbaStorageFees += Math.abs(other);
+
+      // SKU別FBA保管手数料
+      if (sku) {
+        const existing = skuMap.get(sku);
+        if (existing) {
+          existing.fbaStorageFees += other; // マイナス値として保持
+          skuMap.set(sku, existing);
+        }
+      }
+    }
+
+    // 広告費用もSKU別に集計
+    if (transactionType === '注文外料金' && transaction.description.includes('広告費用')) {
+      if (sku) {
+        const existing = skuMap.get(sku);
+        if (existing) {
+          existing.advertisingCosts += other; // マイナス値として保持
+          skuMap.set(sku, existing);
+        }
+      }
     }
 
     // その他の手数料

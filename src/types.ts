@@ -35,9 +35,12 @@ export interface SkuAnalysis {
   totalSales: number;
   totalProfit: number;
   totalQuantity: number;
-  amazonFees: number;
-  advertisingCosts: number;
+  salesCount: number;
   returnAmount: number;
+  returnCount: number;
+  amazonFees: number;
+  fbaFees: number;
+  advertisingCosts: number;
   fbaStorageFees: number;
   otherFees: number;
   averageSellingPrice: number;
@@ -56,6 +59,7 @@ export interface DashboardData {
     month: string;
     sales: number;
     profit: number;
+    fees: number;
   }[];
   feeBreakdown: {
     amazonFees: number;
