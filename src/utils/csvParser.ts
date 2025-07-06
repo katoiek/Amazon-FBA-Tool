@@ -6,11 +6,18 @@ export function parseCSVText(csvText: string): AmazonTransaction[] {
   const lines = cleanedText.split('\n');
   const transactions: AmazonTransaction[] = [];
 
+  console.log('📊 CSV lines count:', lines.length);
+  console.log('📊 First 10 lines:');
+  for (let i = 0; i < Math.min(10, lines.length); i++) {
+    console.log(`Line ${i}: ${lines[i]}`);
+  }
+
   // ヘッダー行を見つける（8行目）
   const headerLineIndex = 7;
   const dataStartIndex = 8;
 
   if (lines.length <= dataStartIndex) {
+    console.log('❌ Not enough lines in CSV file');
     return transactions;
   }
 

@@ -21,6 +21,11 @@ app.get('/', (c) => {
   return c.html(getIndexHTML());
 });
 
+// ヘルスチェックAPI
+app.get('/api/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // CSVアップロード・解析API
 app.post('/api/analyze', async (c) => {
   try {
@@ -33,18 +38,34 @@ app.post('/api/analyze', async (c) => {
       return c.json({ error: 'CSVファイルが選択されていません' }, 400);
     }
 
-    console.log('📁 Processing CSV file:', csvFile.name);
+    console.log('📁 Processing CSV file:', csvFile.name, 'Size:', csvFile.size);
+
+    // ファイルサイズチェック (10MB制限)
+    if (csvFile.size > 10 * 1024 * 1024) {
+      console.log('❌ File too large:', csvFile.size);
+      return c.json({ error: 'ファイルサイズが大きすぎます (10MB以下にしてください)' }, 400);
+    }
+
     const csvText = await csvFile.text();
+    console.log('📝 CSV text length:', csvText.length);
+
     const transactions = parseCSVText(csvText);
     console.log(`📊 Parsed ${transactions.length} transactions`);
+
+    if (transactions.length === 0) {
+      console.log('❌ No transactions found');
+      return c.json({ error: '有効な取引データが見つかりません' }, 400);
+    }
 
     const dashboardData = analyzeTransactions(transactions);
     console.log('✅ Analysis completed successfully');
 
     return c.json(dashboardData);
   } catch (error) {
-    console.error('CSV解析エラー:', error);
-    return c.json({ error: 'CSV解析中にエラーが発生しました' }, 500);
+    console.error('❌ CSV解析エラー:', error);
+    return c.json({
+      error: 'CSV解析中にエラーが発生しました: ' + (error instanceof Error ? error.message : String(error))
+    }, 500);
   }
 });
 
@@ -291,6 +312,7 @@ function getIndexHTML(): string {
                 <input type="file" id="csvFile" class="file-input" accept=".csv" />
                 <label for="csvFile" class="file-input-label">ファイルを選択</label>
                 <p>または、ファイルをここにドラッグ&ドロップしてください</p>
+                <span id="fileName" style="color: #666; font-size: 0.9em; display: block; margin-top: 5px;"></span>
             </div>
             <button onclick="analyzeCSV()" style="display: none;" id="analyzeButton">分析開始</button>
         </div>
@@ -370,6 +392,24 @@ function getIndexHTML(): string {
         let feeChart = null;
         let skuChart = null;
         let showAllSkus = false;
+        let droppedFile = null; // ドロップされたファイルを保持
+
+        // サーバー接続確認
+        async function checkServerConnection() {
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    console.log('✅ Server connection OK');
+                    return true;
+                } else {
+                    console.log('❌ Server connection failed');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Server connection error:', error);
+                return false;
+            }
+        }
 
         // ファイルドラッグ&ドロップ
         const fileInputContainer = document.getElementById('fileInputContainer');
@@ -391,45 +431,125 @@ function getIndexHTML(): string {
 
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                fileInput.files = files;
+                const file = files[0];
+                console.log('📁 File dropped:', file.name);
+                console.log('📊 File size:', file.size, 'bytes (', (file.size / 1024 / 1024).toFixed(2), 'MB)');
+                console.log('📋 File type:', file.type);
+
+                // ドロップされたファイルを保持（FileListの直接代入は多くのブラウザで制限される）
+                droppedFile = file;
+                console.log('✅ Dropped file stored:', droppedFile.name);
+
+                // FileListも試してみる（可能であれば）
+                try {
+                    fileInput.files = files;
+                    console.log('✅ FileList assigned successfully');
+                } catch (error) {
+                    console.warn('⚠️ FileList assignment failed (using droppedFile instead):', error);
+                }
+
                 analyzeButton.style.display = 'inline-block';
+
+                // ファイル名を表示
+                const fileNameSpan = document.getElementById('fileName');
+                if (fileNameSpan) {
+                    fileNameSpan.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + 'MB)';
+                }
             }
         });
 
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length > 0) {
+                droppedFile = null; // ドロップされたファイルをリセット
+                console.log('📁 File selected:', fileInput.files[0].name);
                 analyzeButton.style.display = 'inline-block';
+
+                // ファイル名を表示
+                const fileNameSpan = document.getElementById('fileName');
+                if (fileNameSpan) {
+                    fileNameSpan.textContent = fileInput.files[0].name;
+                }
             }
         });
 
         async function analyzeCSV() {
-            const file = fileInput.files[0];
+            // ドロップされたファイルを優先的に使用
+            const file = droppedFile || fileInput.files[0];
             if (!file) {
                 showError('ファイルを選択してください');
                 return;
             }
 
+            console.log('📊 Starting analysis for file:', file.name, 'Size:', file.size);
+            console.log('📊 File source:', droppedFile ? 'Dropped' : 'Selected');
+
             showLoading(true);
             hideError();
+
+            // サーバー接続確認
+            const isConnected = await checkServerConnection();
+            if (!isConnected) {
+                showError('サーバーに接続できません。サーバーが起動していることを確認してください。');
+                showLoading(false);
+                return;
+            }
 
             try {
                 const formData = new FormData();
                 formData.append('csvFile', file);
 
+                console.log('📤 Sending CSV file to server:', file.name);
+                console.log('📊 File size:', file.size, 'bytes');
+                console.log('📋 File type:', file.type);
+                console.log('📋 File last modified:', new Date(file.lastModified).toISOString());
+                console.log('📋 FormData entries:');
+                for (let pair of formData.entries()) {
+                    console.log('  ', pair[0], ':', pair[1]);
+                }
+
+                console.log('🚀 Making fetch request to /api/analyze');
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     body: formData
                 });
 
+                console.log('📡 Server response status:', response.status);
+                console.log('📡 Server response headers:', response.headers);
+                console.log('📡 Server response ok:', response.ok);
+
                 if (!response.ok) {
-                    throw new Error('データの分析に失敗しました');
+                    const errorText = await response.text();
+                    console.error('❌ Server error:', errorText);
+                    throw new Error('サーバーエラー (' + response.status + '): ' + errorText);
                 }
 
                 const data = await response.json();
+                console.log('✅ Analysis completed successfully');
                 currentData = data;
                 displayDashboard(data);
             } catch (error) {
-                showError('エラー: ' + error.message);
+                console.error('❌ Analysis error:', error);
+                console.error('❌ Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+
+                if (error.message.includes('Failed to fetch')) {
+                    // より詳細なエラー診断
+                    try {
+                        const healthCheck = await fetch('/api/health');
+                        if (healthCheck.ok) {
+                            showError('サーバーは動作していますが、ファイルのアップロードに失敗しました。ファイルサイズが大きすぎる可能性があります。');
+                        } else {
+                            showError('サーバーに接続できません。サーバーが起動していることを確認してください。');
+                        }
+                    } catch {
+                        showError('サーバーに接続できません。サーバーが起動していることを確認してください。');
+                    }
+                } else {
+                    showError('エラー: ' + error.message);
+                }
             } finally {
                 showLoading(false);
             }
