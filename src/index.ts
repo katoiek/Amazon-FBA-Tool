@@ -250,6 +250,7 @@ function getIndexHTML(): string {
             padding: 1.5rem;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
         }
 
         .chart-container canvas {
@@ -267,6 +268,7 @@ function getIndexHTML(): string {
             padding: 1.5rem;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
         }
 
         .table-controls {
@@ -403,27 +405,33 @@ function getIndexHTML(): string {
                 </div>
             </div>
 
+            <!-- 1. 月別売上推移 -->
+            <div class="chart-container">
+                <h3 class="chart-title">月別売上推移</h3>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+
+            <!-- 2. SKU別売上分析 -->
+            <div class="chart-container">
+                <h3 class="chart-title">SKU別売上分析</h3>
+                <canvas id="skuChart"></canvas>
+            </div>
+
+            <!-- 3. 費用内訳 | 手数料月別推移（横並び） -->
             <div class="charts-grid">
-                <div class="chart-container">
-                    <h3 class="chart-title">月別売上推移</h3>
-                    <canvas id="monthlyChart"></canvas>
-                </div>
                 <div class="chart-container">
                     <h3 class="chart-title">費用内訳</h3>
                     <canvas id="feeChart"></canvas>
                 </div>
-            </div>
-
-            <div class="chart-container">
-                <h3 class="chart-title">手数料月別推移</h3>
-                <canvas id="feeMonthlyChart"></canvas>
-            </div>
-
-            <div class="sku-table-container">
-                <h3 class="chart-title">SKU別売上分析</h3>
                 <div class="chart-container">
-                    <canvas id="skuChart"></canvas>
+                    <h3 class="chart-title">手数料月別推移</h3>
+                    <canvas id="feeMonthlyChart"></canvas>
                 </div>
+            </div>
+
+            <!-- 4. 最下段のリスト -->
+            <div class="sku-table-container">
+                <h3 class="chart-title">SKU詳細データ</h3>
                 <div class="table-controls">
                     <button id="showAllSkus" onclick="toggleSkuView()" class="btn btn-secondary">
                         📋 全SKU表示
@@ -449,6 +457,7 @@ function getIndexHTML(): string {
                     <tbody id="skuTableBody">
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
     </div>

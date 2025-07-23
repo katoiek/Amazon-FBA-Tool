@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新しいレイアウト - Amazon FBA ダッシュボード</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .sku-table-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        canvas {
+            max-height: 400px;
+        }
+
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .demo-placeholder {
+            height: 300px;
+            background: linear-gradient(45deg, #f0f4ff, #e8f0ff);
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .layout-info {
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #0c5460;
+        }
+
+        .layout-info h3 {
+            margin-top: 0;
+            color: #0c5460;
+        }
+
+        .section-number {
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 新しいレイアウト構成</h1>
+            <p>改善されたダッシュボードレイアウト</p>
+        </div>
+
+        <div class="layout-info">
+            <h3>📋 レイアウト構成</h3>
+            <ol>
+                <li><strong>月別売上推移</strong> - 売上の時系列変化を確認</li>
+                <li><strong>SKU別売上分析</strong> - 商品別の売上をグラフで視覚化</li>
+                <li><strong>費用内訳 | 手数料月別推移</strong> - 2つのグラフを横並びで効率的表示</li>
+                <li><strong>SKU詳細データ</strong> - 詳細な商品データをテーブル形式で</li>
+            </ol>
+        </div>
+
+        <!-- 1. 月別売上推移 -->
+        <div class="chart-container">
+            <h3 class="chart-title">
+                <span class="section-number">1</span>月別売上推移
+            </h3>
+            <div class="demo-placeholder">
+                📈 売上と利益の月別推移を線グラフで表示
+            </div>
+        </div>
+
+        <!-- 2. SKU別売上分析 -->
+        <div class="chart-container">
+            <h3 class="chart-title">
+                <span class="section-number">2</span>SKU別売上分析
+            </h3>
+            <div class="demo-placeholder">
+                📊 上位商品の売上を棒グラフで表示
+            </div>
+        </div>
+
+        <!-- 3. 費用内訳 | 手数料月別推移（横並び） -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <span class="section-number">3</span>費用内訳
+                </h3>
+                <div class="demo-placeholder">
+                    🥧 手数料別の内訳を円グラフで表示
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <span class="section-number">3</span>手数料月別推移
+                </h3>
+                <div class="demo-placeholder">
+                    📈 各手数料の月別推移を線グラフで表示
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 最下段のリスト -->
+        <div class="sku-table-container">
+            <h3 class="chart-title">
+                <span class="section-number">4</span>SKU詳細データ
+            </h3>
+            <div class="table-controls">
+                <button class="btn btn-secondary">📋 全SKU表示</button>
+                <span>上位10商品を表示中</span>
+            </div>
+            <div class="demo-placeholder">
+                📋 SKU、商品名、売上、利益、返金額等の詳細データをテーブル表示
+            </div>
+        </div>
+
+        <div class="layout-info">
+            <h3>✨ レイアウトの利点</h3>
+            <ul>
+                <li><strong>優先順位に基づく配置:</strong> 最も重要な売上推移を最上部に</li>
+                <li><strong>効率的な画面活用:</strong> 関連する2つのグラフを横並びで表示</li>
+                <li><strong>段階的な詳細表示:</strong> 概要→分析→詳細データの流れ</li>
+                <li><strong>レスポンシブ対応:</strong> モバイルでは自動的に縦並びに変更</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
