@@ -5,6 +5,30 @@ import { DashboardData } from './types';
 
 const app = new Hono();
 
+// セキュリティヘッダーの設定
+app.use('*', async (c, next) => {
+  await next();
+
+  // セキュリティヘッダーを設定
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('X-XSS-Protection', '1; mode=block');
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // CSVファイルのアップロードのみ許可する Content-Security-Policy
+  if (c.req.path === '/') {
+    c.header('Content-Security-Policy',
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "connect-src 'self'; " +
+      "img-src 'self' data:; " +
+      "font-src 'self' https://cdn.jsdelivr.net; " +
+      "form-action 'self'"
+    );
+  }
+});
+
 // CORS設定
 app.use('/api/*', cors({
   origin: ['*'],
@@ -17,7 +41,6 @@ app.use('/api/*', cors({
 
 // メインページ
 app.get('/', (c) => {
-  console.log('🏠 Main page accessed');
   return c.html(getIndexHTML());
 });
 
@@ -29,36 +52,27 @@ app.get('/api/health', (c) => {
 // CSVアップロード・解析API
 app.post('/api/analyze', async (c) => {
   try {
-    console.log('📤 CSV analysis request received');
+
     const body = await c.req.parseBody();
     const csvFile = body.csvFile as File;
 
     if (!csvFile) {
-      console.log('❌ No CSV file provided');
       return c.json({ error: 'CSVファイルが選択されていません' }, 400);
     }
 
-    console.log('📁 Processing CSV file:', csvFile.name, 'Size:', csvFile.size);
-
     // ファイルサイズチェック (10MB制限)
     if (csvFile.size > 10 * 1024 * 1024) {
-      console.log('❌ File too large:', csvFile.size);
       return c.json({ error: 'ファイルサイズが大きすぎます (10MB以下にしてください)' }, 400);
     }
 
     const csvText = await csvFile.text();
-    console.log('📝 CSV text length:', csvText.length);
-
     const transactions = parseCSVText(csvText);
-    console.log(`📊 Parsed ${transactions.length} transactions`);
 
     if (transactions.length === 0) {
-      console.log('❌ No transactions found');
       return c.json({ error: '有効な取引データが見つかりません' }, 400);
     }
 
     const dashboardData = analyzeTransactions(transactions);
-    console.log('✅ Analysis completed successfully');
 
     return c.json(dashboardData);
   } catch (error) {
@@ -476,10 +490,10 @@ function getIndexHTML(): string {
             try {
                 const response = await fetch('/api/health');
                 if (response.ok) {
-                    console.log('✅ Server connection OK');
+
                     return true;
                 } else {
-                    console.log('❌ Server connection failed');
+
                     return false;
                 }
             } catch (error) {
@@ -509,20 +523,18 @@ function getIndexHTML(): string {
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 const file = files[0];
-                console.log('📁 File dropped:', file.name);
-                console.log('📊 File size:', file.size, 'bytes (', (file.size / 1024 / 1024).toFixed(2), 'MB)');
-                console.log('📋 File type:', file.type);
+
 
                 // ドロップされたファイルを保持（FileListの直接代入は多くのブラウザで制限される）
                 droppedFile = file;
-                console.log('✅ Dropped file stored:', droppedFile.name);
+
 
                 // FileListも試してみる（可能であれば）
                 try {
                     fileInput.files = files;
-                    console.log('✅ FileList assigned successfully');
+
                 } catch (error) {
-                    console.warn('⚠️ FileList assignment failed (using droppedFile instead):', error);
+
                 }
 
                 analyzeButton.style.display = 'inline-block';
@@ -538,7 +550,7 @@ function getIndexHTML(): string {
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length > 0) {
                 droppedFile = null; // ドロップされたファイルをリセット
-                console.log('📁 File selected:', fileInput.files[0].name);
+
                 analyzeButton.style.display = 'inline-block';
 
                 // ファイル名を表示
@@ -557,8 +569,7 @@ function getIndexHTML(): string {
                 return;
             }
 
-            console.log('📊 Starting analysis for file:', file.name, 'Size:', file.size);
-            console.log('📊 File source:', droppedFile ? 'Dropped' : 'Selected');
+
 
             showLoading(true);
             hideError();
@@ -575,24 +586,13 @@ function getIndexHTML(): string {
                 const formData = new FormData();
                 formData.append('csvFile', file);
 
-                console.log('📤 Sending CSV file to server:', file.name);
-                console.log('📊 File size:', file.size, 'bytes');
-                console.log('📋 File type:', file.type);
-                console.log('📋 File last modified:', new Date(file.lastModified).toISOString());
-                console.log('📋 FormData entries:');
-                for (let pair of formData.entries()) {
-                    console.log('  ', pair[0], ':', pair[1]);
-                }
 
-                console.log('🚀 Making fetch request to /api/analyze');
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     body: formData
                 });
 
-                console.log('📡 Server response status:', response.status);
-                console.log('📡 Server response headers:', response.headers);
-                console.log('📡 Server response ok:', response.ok);
+
 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -601,16 +601,12 @@ function getIndexHTML(): string {
                 }
 
                 const data = await response.json();
-                console.log('✅ Analysis completed successfully');
+
                 currentData = data;
                 displayDashboard(data);
             } catch (error) {
                 console.error('❌ Analysis error:', error);
-                console.error('❌ Error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
-                });
+
 
                 if (error.message.includes('Failed to fetch')) {
                     // より詳細なエラー診断

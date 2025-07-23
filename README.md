@@ -32,6 +32,7 @@ Amazon FBAの売上データCSVファイルを解析し、詳細な分析結果�
 
 - **フロントエンド**: TypeScript, HTML5, CSS3, Chart.js
 - **バックエンド**: Hono (Node.js/Cloudflare Workers)
+- **セキュリティ**: CSP, XSS Protection, CSRF対策
 - **デプロイ**: Cloudflare Workers (将来対応)
 - **開発環境**: TypeScript, TSX
 
@@ -142,6 +143,18 @@ MIT License
 ## 貢献
 
 プルリクエストや Issue の投稿を歓迎しています。
+
+## セキュリティ
+
+### データ保護
+- **ローカル処理**: CSVファイルはサーバー側でのみ処理され、保存されません
+- **セキュリティヘッダー**: XSS、CSRF、クリックジャッキング対策を実装
+- **CSP**: Content Security Policyによる外部リソースの制限
+- **データ暗号化**: HTTPS通信の必須化
+
+### 注意事項
+- 実際の取引データを含むCSVファイルをGitリポジトリにコミットしないでください
+- 本番環境では適切な認証・認可機能の追加を推奨します
 
 ## サポート
 

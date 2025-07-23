@@ -60,3 +60,18 @@ wrangler.toml.backup
 # Temporary files
 .tmp/
 temp/
+
+# Sensitive data files (CSV files containing actual transaction data)
+*.csv
+Data/
+data/
+uploads/
+
+# Test files and demos
+*demo.html
+test-*.html
+layout-demo.html
+button-demo.html
+
+# Local configuration
+config.local.json
