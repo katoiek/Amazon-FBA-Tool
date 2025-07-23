@@ -60,6 +60,10 @@ export interface DashboardData {
     sales: number;
     profit: number;
     fees: number;
+    amazonFees: number;
+    fbaFees: number;
+    otherFees: number;
+    advertisingCosts: number;
   }[];
   feeBreakdown: {
     amazonFees: number;

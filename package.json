@@ -12,15 +12,15 @@
     "start": "node dist/server.js"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@cloudflare/workers-types": "^4.20231218.0",
-    "esbuild": "^0.19.8",
-    "typescript": "^5.3.3",
-    "wrangler": "^3.22.1"
+    "@types/node": "^24.1.0",
+    "@cloudflare/workers-types": "^4.20250723.0",
+    "esbuild": "^0.25.8",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.25.1"
   },
   "dependencies": {
-    "hono": "^4.0.0",
-    "@hono/node-server": "^1.8.0",
-    "tsx": "^4.6.2"
+    "hono": "^4.8.5",
+    "@hono/node-server": "^1.17.1",
+    "tsx": "^4.20.3"
   }
 }

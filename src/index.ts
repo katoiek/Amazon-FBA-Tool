@@ -136,16 +136,70 @@ function getIndexHTML(): string {
 
         .file-input-label {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 12px 24px;
             background: #667eea;
             color: white;
             border-radius: 5px;
             cursor: pointer;
-            transition: background 0.3s;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
         }
 
         .file-input-label:hover {
             background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 8px 4px;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            background: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
         }
 
 
@@ -223,17 +277,21 @@ function getIndexHTML(): string {
         }
 
         .table-controls button {
-            padding: 0.5rem 1rem;
+            padding: 8px 16px;
             background: #667eea;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
         .table-controls button:hover {
             background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .negative-value {
@@ -310,11 +368,13 @@ function getIndexHTML(): string {
             <h2>CSVファイルをアップロード</h2>
             <div class="file-input-container" id="fileInputContainer">
                 <input type="file" id="csvFile" class="file-input" accept=".csv" />
-                <label for="csvFile" class="file-input-label">ファイルを選択</label>
+                <label for="csvFile" class="file-input-label">📁 ファイルを選択</label>
                 <p>または、ファイルをここにドラッグ&ドロップしてください</p>
                 <span id="fileName" style="color: #666; font-size: 0.9em; display: block; margin-top: 5px;"></span>
             </div>
-            <button onclick="analyzeCSV()" style="display: none;" id="analyzeButton">分析開始</button>
+            <button onclick="analyzeCSV()" class="btn btn-primary" style="display: none;" id="analyzeButton">
+                📊 分析開始
+            </button>
         </div>
 
         <div id="loading" class="loading" style="display: none;">
@@ -354,13 +414,20 @@ function getIndexHTML(): string {
                 </div>
             </div>
 
+            <div class="chart-container">
+                <h3 class="chart-title">手数料月別推移</h3>
+                <canvas id="feeMonthlyChart"></canvas>
+            </div>
+
             <div class="sku-table-container">
                 <h3 class="chart-title">SKU別売上分析</h3>
                 <div class="chart-container">
                     <canvas id="skuChart"></canvas>
                 </div>
                 <div class="table-controls">
-                    <button id="showAllSkus" onclick="toggleSkuView()">全SKU表示</button>
+                    <button id="showAllSkus" onclick="toggleSkuView()" class="btn btn-secondary">
+                        📋 全SKU表示
+                    </button>
                     <span id="skuCountDisplay">上位10商品を表示中</span>
                 </div>
                 <table class="sku-table">
@@ -391,6 +458,7 @@ function getIndexHTML(): string {
         let monthlyChart = null;
         let feeChart = null;
         let skuChart = null;
+        let feeMonthlyChart = null;
         let showAllSkus = false;
         let droppedFile = null; // ドロップされたファイルを保持
 
@@ -569,6 +637,9 @@ function getIndexHTML(): string {
 
             // 費用内訳グラフ
             displayFeeChart(data.feeBreakdown);
+
+            // 手数料月別推移グラフ
+            displayFeeMonthlyChart(data.monthlyTrends);
 
             // SKUチャート
             displaySkuChart(data.skuAnalysis);
@@ -798,6 +869,73 @@ function getIndexHTML(): string {
             });
         }
 
+        function displayFeeMonthlyChart(monthlyTrends) {
+            const ctx = document.getElementById('feeMonthlyChart').getContext('2d');
+
+            if (feeMonthlyChart) {
+                feeMonthlyChart.destroy();
+            }
+
+            feeMonthlyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlyTrends.map(trend => trend.month),
+                    datasets: [{
+                        label: 'Amazon手数料',
+                        data: monthlyTrends.map(trend => trend.amazonFees || 0),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'FBA手数料',
+                        data: monthlyTrends.map(trend => trend.fbaFees || 0),
+                        borderColor: '#20c997',
+                        backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'その他手数料',
+                        data: monthlyTrends.map(trend => trend.otherFees || 0),
+                        borderColor: '#6f42c1',
+                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: '広告費用',
+                        data: monthlyTrends.map(trend => trend.advertisingCosts || 0),
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: '手数料種別の月別推移'
+                        }
+                    }
+                }
+            });
+        }
+
         function displaySkuTable(skuAnalysis) {
             const tbody = document.getElementById('skuTableBody');
             tbody.innerHTML = '';
@@ -832,7 +970,7 @@ function getIndexHTML(): string {
         function toggleSkuView() {
             showAllSkus = !showAllSkus;
             const button = document.getElementById('showAllSkus');
-            button.textContent = showAllSkus ? '上位10商品表示' : '全SKU表示';
+            button.innerHTML = showAllSkus ? '🔝 上位10商品表示' : '📋 全SKU表示';
 
             if (currentData) {
                 displaySkuTable(currentData.skuAnalysis);

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>統一されたボタンデザイン - デモ</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .demo-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .demo-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 8px 4px;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            background: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin: 8px 4px;
+        }
+
+        .file-input-label:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .table-controls button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 4px 2px;
+        }
+
+        .table-controls button:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .status {
+            color: #28a745;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Amazon FBA ダッシュボード</h1>
+            <p>統一されたボタンデザインの実装</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>📁 ファイルアップロードセクション</h2>
+            <div class="button-group">
+                <input type="file" id="csvFile" class="file-input" accept=".csv" />
+                <label for="csvFile" class="file-input-label">📁 ファイルを選択</label>
+                <button class="btn btn-primary">📊 分析開始</button>
+                <span class="status">✨ ホバーエフェクト付き</span>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📊 データ表示セクション</h2>
+            <div class="button-group">
+                <div class="table-controls">
+                    <button>📋 全SKU表示</button>
+                    <button>🔝 上位10商品表示</button>
+                </div>
+                <span class="status">✨ 統一されたスタイル</span>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎨 ボタンバリエーション</h2>
+            <div class="button-group">
+                <button class="btn btn-primary">プライマリボタン</button>
+                <button class="btn btn-secondary">セカンダリボタン</button>
+                <button class="btn" disabled>無効化ボタン</button>
+                <span class="status">✨ 色とエフェクトの統一</span>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>✨ デザインの特徴</h2>
+            <ul style="color: #666; line-height: 1.8;">
+                <li><strong>統一されたパディング:</strong> 12px 24px（メインボタン）、8px 16px（小さいボタン）</li>
+                <li><strong>ホバーエフェクト:</strong> 色の変化 + 軽い上昇 + ドロップシャドウ</li>
+                <li><strong>アイコン付き:</strong> 各ボタンに適切な絵文字アイコンを追加</li>
+                <li><strong>滑らかなトランジション:</strong> 0.3秒のeaseアニメーション</li>
+                <li><strong>アクセシビリティ:</strong> 無効化状態とフォーカス状態の考慮</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // デモンストレーション用のインタラクション
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.btn, .file-input-label, .table-controls button');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.disabled) return;
+
+                    // クリックエフェクト
+                    this.style.transform = 'translateY(0)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+
+                    console.log('ボタンがクリックされました:', this.textContent);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

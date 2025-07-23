@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手数料月別推移テスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        canvas {
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Amazon FBA 手数料月別推移 - テストデモ</h1>
+
+    <div class="chart-container">
+        <h2>手数料月別推移</h2>
+        <canvas id="feeMonthlyChart"></canvas>
+    </div>
+
+    <script>
+        // サンプルデータ（実際のCSVから解析されるような形式）
+        const sampleMonthlyTrends = [
+            {
+                month: '2025/01',
+                amazonFees: 45000,
+                fbaFees: 32000,
+                otherFees: 8000,
+                advertisingCosts: 37090
+            },
+            {
+                month: '2025/02',
+                amazonFees: 52000,
+                fbaFees: 38000,
+                otherFees: 12000,
+                advertisingCosts: 42000
+            },
+            {
+                month: '2025/03',
+                amazonFees: 38000,
+                fbaFees: 28000,
+                otherFees: 6000,
+                advertisingCosts: 35000
+            },
+            {
+                month: '2025/04',
+                amazonFees: 47000,
+                fbaFees: 34000,
+                otherFees: 9000,
+                advertisingCosts: 39000
+            },
+            {
+                month: '2025/05',
+                amazonFees: 41000,
+                fbaFees: 30000,
+                otherFees: 7500,
+                advertisingCosts: 36000
+            },
+            {
+                month: '2025/06',
+                amazonFees: 49000,
+                fbaFees: 36000,
+                otherFees: 11000,
+                advertisingCosts: 41000
+            }
+        ];
+
+        function displayFeeMonthlyChart(monthlyTrends) {
+            const ctx = document.getElementById('feeMonthlyChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlyTrends.map(trend => trend.month),
+                    datasets: [{
+                        label: 'Amazon手数料',
+                        data: monthlyTrends.map(trend => trend.amazonFees || 0),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'FBA手数料',
+                        data: monthlyTrends.map(trend => trend.fbaFees || 0),
+                        borderColor: '#20c997',
+                        backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'その他手数料',
+                        data: monthlyTrends.map(trend => trend.otherFees || 0),
+                        borderColor: '#6f42c1',
+                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: '広告費用',
+                        data: monthlyTrends.map(trend => trend.advertisingCosts || 0),
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: '手数料種別の月別推移'
+                        }
+                    }
+                }
+            });
+        }
+
+        // ページ読み込み後にチャートを表示
+        document.addEventListener('DOMContentLoaded', function() {
+            displayFeeMonthlyChart(sampleMonthlyTrends);
+        });
+    </script>
+</body>
+</html>

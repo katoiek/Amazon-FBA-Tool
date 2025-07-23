@@ -102,9 +102,29 @@ function parseAmount(value: string): number {
   return isNaN(num) ? 0 : num;
 }
 
+function createDefaultMonthlyData() {
+  return {
+    sales: 0,
+    profit: 0,
+    fees: 0,
+    amazonFees: 0,
+    fbaFees: 0,
+    otherFees: 0,
+    advertisingCosts: 0
+  };
+}
+
 export function analyzeTransactions(transactions: AmazonTransaction[]): DashboardData {
   const skuMap = new Map<string, SkuAnalysis>();
-  const monthlyMap = new Map<string, { sales: number; profit: number; fees: number }>();
+  const monthlyMap = new Map<string, {
+    sales: number;
+    profit: number;
+    fees: number;
+    amazonFees: number;
+    fbaFees: number;
+    otherFees: number;
+    advertisingCosts: number;
+  }>();
 
   let totalSales = 0;
   let totalProfit = 0;
@@ -160,16 +180,25 @@ export function analyzeTransactions(transactions: AmazonTransaction[]): Dashboar
 
       // 月別データ
       const month = date.substring(0, 7); // YYYY/MM
-      const monthlyData = monthlyMap.get(month) || { sales: 0, profit: 0, fees: 0 };
+      const monthlyData = monthlyMap.get(month) || createDefaultMonthlyData();
       monthlyData.sales += productSales;
       monthlyData.profit += total;
       monthlyData.fees += Math.abs(fees) + Math.abs(fbaFees); // 手数料の合計を追加
+      monthlyData.amazonFees += Math.abs(fees); // Amazon手数料を追加
+      monthlyData.fbaFees += Math.abs(fbaFees); // FBA手数料を追加
+      monthlyData.otherFees += Math.abs(otherTransactionFees); // その他の手数料を追加
       monthlyMap.set(month, monthlyData);
     }
 
     // 広告費用
     if (transactionType === '注文外料金' && transaction.description.includes('広告費用')) {
       advertisingCosts += Math.abs(other);
+
+      // 月別データ（広告費用）
+      const month = date.substring(0, 7);
+      const monthlyData = monthlyMap.get(month) || createDefaultMonthlyData();
+      monthlyData.advertisingCosts += Math.abs(other);
+      monthlyMap.set(month, monthlyData);
     }
 
     // 返金
@@ -188,7 +217,7 @@ export function analyzeTransactions(transactions: AmazonTransaction[]): Dashboar
 
       // 月別データ（返金）
       const month = date.substring(0, 7);
-      const monthlyData = monthlyMap.get(month) || { sales: 0, profit: 0, fees: 0 };
+      const monthlyData = monthlyMap.get(month) || createDefaultMonthlyData();
       monthlyData.profit += total; // 返金はマイナス値なので利益から引く
       monthlyMap.set(month, monthlyData);
     }
