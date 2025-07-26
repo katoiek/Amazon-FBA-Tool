@@ -8,7 +8,8 @@
     "dev": "tsx src/dev-server.ts",
     "dev:cloudflare": "wrangler dev",
     "build": "tsc && esbuild src/server.ts --bundle --outfile=dist/server.js --format=esm --platform=node --target=node18",
-    "deploy": "wrangler publish",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler dev",
     "start": "node dist/server.js",
     "security-check": "echo Checking for sensitive files... && (Get-ChildItem -Recurse -Include *.csv,*demo*.html,test-*.html -ErrorAction SilentlyContinue | Select-Object -First 5 | ForEach-Object { Write-Host $_.FullName }) || echo No sensitive files found",
     "pre-commit": "npm run security-check && npm run build"
